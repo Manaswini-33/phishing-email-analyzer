@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Kaggle credentials
+kaggle.json
+.kaggle/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Models larger files if needed (tracked or ignored)
+# models/*.pkl can be tracked or ignored depending on deployment
+# data/raw/*.zip
