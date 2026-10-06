@@ -38,7 +38,8 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
     confusion_matrix,
-    classification_report
+    classification_report,
+    roc_curve
 )
 
 from src.data_loader import load_dataset
@@ -84,6 +85,14 @@ def evaluate_classifier(name: str, model: Any, X_test, y_test) -> Dict[str, Any]
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     fnr = float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0
 
+    # ROC curve points for dashboard visualization
+    try:
+        fpr, tpr, _ = roc_curve(y_test, y_prob)
+        fpr_list = [round(float(v), 4) for v in fpr]
+        tpr_list = [round(float(v), 4) for v in tpr]
+    except Exception:
+        fpr_list, tpr_list = [0.0, 1.0], [0.0, 1.0]
+
     return {
         "model_name": name,
         "accuracy": round(acc, 4),
@@ -97,6 +106,8 @@ def evaluate_classifier(name: str, model: Any, X_test, y_test) -> Dict[str, Any]
         "false_positives": int(fp),
         "false_negatives": int(fn),
         "true_positives": int(tp),
+        "roc_fpr": fpr_list,
+        "roc_tpr": tpr_list,
     }
 
 

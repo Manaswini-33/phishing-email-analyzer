@@ -165,12 +165,10 @@ Launch the interactive dashboard:
 streamlit run dashboard/app.py
 ```
 
-### Dashboard Features Across 5 Pages:
-1. **🏠 Home & Architecture**: Problem statement, system overview, architecture diagram, cybersecurity principles.
-2. **🔍 Real-Time Email Analyzer**: Live text analyzer with pre-loaded presets (Microsoft 365 phish, CEO wire fraud, AWS billing, etc.), calibrated 0–100 risk gauge, XAI token attribution chart, heuristic tables, and incident containment steps.
-3. **📊 Threat Intelligence Analytics**: Interactive Plotly distributions across 13 threat taxonomies, severity tiers, and N-gram keyword frequencies.
-4. **🛡️ Emerging Threat Patterns (Anomaly Detection)**: 2D Manifold projection (TruncatedSVD) with Isolation Forest anomaly score overlay for zero-day threat discovery.
-5. **📈 Model Benchmark & Explainability**: Confusion matrix heatmaps, ROC-AUC comparisons, and global feature importance charts.
+### Dashboard Features Across 3 Main Pages:
+1. **🔍 Email Analyzer (Default Landing Page)**: Real-time email subject and body triage with sample presets, instant phishing vs legitimate verdict, confidence percentage, calibrated 0–100 threat score, multi-class phishing type identification, "Why was this email flagged?" explainability checkmarks & extracted keywords, actionable incident containment steps, and collapsible technical feature metrics.
+2. **📊 Threat Analytics**: Dataset-level distribution metrics, 13-category attack taxonomy chart, threat severity distribution, suspicious indicator prevalence comparisons (Urgent, Credential, Financial, URL, Exclamation), and unsupervised Isolation Forest unusual pattern detection.
+3. **📈 Model Performance**: Comparative benchmark table (Logistic Regression vs Random Forest vs XGBoost), selected best model summary, confusion matrix heatmap, multi-model ROC-AUC curves, and global top predictive feature importance chart.
 
 ---
 
