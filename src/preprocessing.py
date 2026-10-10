@@ -107,10 +107,18 @@ def preprocess_dataframe(df: pd.DataFrame, drop_duplicates: bool = True) -> pd.D
     """
     processed = df.copy()
 
-    # Drop null rows in critical columns
+    # 1. Missing Values Handling: Drop nulls and verify string types
     processed = processed.dropna(subset=["text", "label"]).reset_index(drop=True)
+    processed["text"] = processed["text"].astype(str)
 
-    # Deduplicate
+    # 2. Outlier Handling: Remove non-informative outlier texts (e.g. < 5 characters)
+    initial_rows = len(processed)
+    processed = processed[processed["text"].str.strip().str.len() >= 5].reset_index(drop=True)
+    outliers_dropped = initial_rows - len(processed)
+    if outliers_dropped > 0:
+        print(f"[Preprocessing] Removed {outliers_dropped} non-informative / outlier empty text entries.")
+
+    # 3. Deduplication: Remove exact duplicate email entries
     if drop_duplicates:
         initial_count = len(processed)
         processed = processed.drop_duplicates(subset=["text"]).reset_index(drop=True)
@@ -118,7 +126,7 @@ def preprocess_dataframe(df: pd.DataFrame, drop_duplicates: bool = True) -> pd.D
         if dropped_count > 0:
             print(f"[Preprocessing] Removed {dropped_count} duplicate email entries.")
 
-    # Apply text cleaning
+    # 4. Text Normalization, Regex Masking & Placeholder Replacement
     processed["cleaned_text"] = processed["text"].apply(clean_email_text)
 
     return processed

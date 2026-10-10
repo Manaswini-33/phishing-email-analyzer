@@ -350,7 +350,50 @@ def generate_benchmark_dataset(num_samples: int = 10000) -> pd.DataFrame:
                 "confidence": conf
             })
 
-    # Fill remaining to reach exact num_samples
+    # Fill remaining to reach exact num_samples with realistic borderline edge cases
+    # Edge-case 1: Legitimate emails that contain urgent/security words (causes realistic borderline decision boundaries)
+    borderline_legit_templates = [
+        ("URGENT: Critical Infrastructure Patch Required Tonight", "All engineers: We are deploying an emergency patch for internal databases at 11 PM. Please save your work and log off VPN. Do not click external links; use standard internal CLI.", "Legitimate System Notification"),
+        ("Security Notice: Password Expiration within 3 days", "This is an automated reminder that your Active Directory corporate password will expire in 3 days. Use the standard Windows Ctrl+Alt+Del menu on your laptop to rotate it.", "Legitimate Work Email"),
+        ("Invoice Notification: AWS Monthly Hosting Statement", "Your monthly AWS cloud bill of $214.50 has been debited. Download your receipt directly in the AWS billing console if needed.", "Legitimate Transaction Receipt"),
+        ("HR Alert: Immediate Action on Open Enrollment Window", "Attention staff: Today is the final deadline to submit your health insurance selections. Log into the internal employee portal to confirm.", "Legitimate Work Email"),
+        ("Scheduled Maintenance: Bank of America API Downtime", "Notice for developers: Sandbox payment gateway will be offline for maintenance this Sunday from 2 AM to 4 AM EST.", "Legitimate System Notification")
+    ]
+
+    # Edge-case 2: Subtle spear-phishing emails with conversational phrasing (minimal obvious spam triggers)
+    borderline_phish_templates = [
+        ("Quick question regarding the slide deck", "Hey, can you take a look at the attached financial draft when you have a moment? I uploaded the updated version here: http://secure-shared-docs-cloud.info/review. Thanks!", "CEO / Executive Impersonation"),
+        ("Follow up from our meeting yesterday", "Hi, great meeting with you earlier. Here are the meeting notes and project timeline we discussed: http://client-portal-doc-share.net/notes. Let me know your feedback.", "Financial / Invoice Fraud"),
+        ("Updated contract document for review", "Please review the updated service agreement. We updated the signature lines on page 4. You can sign electronically at http://e-sign-contract-verify.org", "Financial / Invoice Fraud"),
+        ("Coffee catch up notes", "Great seeing you yesterday! As promised, here is the reference paper and slides we talked about: http://shared-drive-file-download.net/paper.", "Credential Harvesting")
+    ]
+
+    # Inject ~250 borderline realistic edge cases
+    num_borderline = 250
+    for _ in range(num_borderline // 2):
+        s, b, cat = random.choice(borderline_legit_templates)
+        var_id = random.randint(1000, 99999)
+        text = f"Subject: {s}\n\n{b} Ref-ID: #{var_id}."
+        data.append({
+            "text": text,
+            "label": 0,
+            "phishing_type": cat,
+            "severity": "None",
+            "confidence": 0.95
+        })
+
+    for _ in range(num_borderline // 2):
+        s, b, cat = random.choice(borderline_phish_templates)
+        var_id = random.randint(1000, 99999)
+        text = f"Subject: {s}\n\n{b} Ref-ID: #{var_id}."
+        data.append({
+            "text": text,
+            "label": 1,
+            "phishing_type": cat,
+            "severity": "High",
+            "confidence": 0.88
+        })
+
     while len(data) < num_samples:
         cat_name = random.choice(categories)
         t_info = category_templates[cat_name]
