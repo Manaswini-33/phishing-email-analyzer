@@ -671,7 +671,7 @@ elif selected_page == "📊 Threat Analytics":
 # ==============================================================================
 elif selected_page == "📈 Model Performance":
     st.markdown('<div class="page-title">📈 Model Performance</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-subtitle">Comparative evaluation across supervised classifiers and explainability benchmarks.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Comparative evaluation across supervised classifiers, multi-model confusion matrices, and explainability benchmarks.</div>', unsafe_allow_html=True)
 
     if artifacts.get("status") != "ready":
         st.error("Metrics summary not available. Please train models first.")
@@ -679,58 +679,198 @@ elif selected_page == "📈 Model Performance":
 
     summary = artifacts["metrics_summary"]
     models_evaluated = summary.get("models_evaluated", [])
-    best_model = summary.get("best_model_name", "Logistic Regression")
+    best_model = summary.get("best_model_name", "XGBoost Classifier")
 
-    # 1. MODEL COMPARISON TABLE
+    # 1. SUPERVISED MODEL COMPARISON BENCHMARK (Full Confusion Matrix + All Metrics)
     st.markdown("### 🏆 Supervised Model Comparison Benchmark")
+    st.caption("Comprehensive evaluation covering classification accuracy, error matrices, recall containment, and discrimination metrics across all trained models:")
+
     df_eval = pd.DataFrame(models_evaluated)
 
-    display_table = df_eval[[
-        "model_name", "accuracy", "precision", "recall", "f1_score", "roc_auc", "false_negatives"
-    ]].copy()
-    display_table.columns = [
-        "Model", "Accuracy", "Precision", "Recall (Key Metric)", "F1-Score", "ROC-AUC", "False Negatives"
-    ]
+    metric_cols = {
+        "model_name": "Model",
+        "accuracy": "Accuracy",
+        "precision": "Precision",
+        "recall": "Recall (Key Metric)",
+        "f1_score": "F1-Score",
+        "roc_auc": "ROC-AUC",
+        "true_positives": "True Positives (TP)",
+        "true_negatives": "True Negatives (TN)",
+        "false_positives": "False Positives (FP)",
+        "false_negatives": "False Negatives (FN)",
+        "false_negative_rate": "Miss Rate (FNR)"
+    }
 
-    st.dataframe(
-        display_table.style.highlight_max(subset=["Recall (Key Metric)", "F1-Score", "ROC-AUC"], color="#dcfce7"),
-        use_container_width=True,
-        hide_index=True
+    display_df = df_eval[list(metric_cols.keys())].rename(columns=metric_cols).copy()
+
+    # Style with green highlight on optimal values
+    styled_table = display_df.style.format({
+        "Accuracy": "{:.4f}",
+        "Precision": "{:.4f}",
+        "Recall (Key Metric)": "{:.4f}",
+        "F1-Score": "{:.4f}",
+        "ROC-AUC": "{:.4f}",
+        "True Positives (TP)": "{:,}",
+        "True Negatives (TN)": "{:,}",
+        "False Positives (FP)": "{:,}",
+        "False Negatives (FN)": "{:,}",
+        "Miss Rate (FNR)": "{:.4f}"
+    }).highlight_max(
+        subset=["Accuracy", "Precision", "Recall (Key Metric)", "F1-Score", "ROC-AUC", "True Positives (TP)", "True Negatives (TN)"],
+        color="#dcfce7"
+    ).highlight_min(
+        subset=["False Positives (FP)", "False Negatives (FN)", "Miss Rate (FNR)"],
+        color="#dcfce7"
     )
 
-    # 2. BEST MODEL & RECALL EMPHASIS
-    b_col1, b_col2 = st.columns([1, 1])
-    with b_col1:
-        st.success(f"**Selected Best Model:** {best_model}\n\nSelected based on its overall classification performance, optimal precision-recall balance, and zero missed attacks.")
+    st.dataframe(styled_table, use_container_width=True, hide_index=True)
 
-    with b_col2:
-        st.info("**Cybersecurity Note:** Recall is particularly critical because false negatives represent malicious phishing emails that evade detection and reach employee inboxes.")
+    # 2. HOLISTIC BEST MODEL DECLARATION & MULTI-CRITERIA DECISION FRAMEWORK
+    st.markdown("### 🏅 Production Model Declaration & Multi-Criteria Decision Framework")
+    
+    st.success(
+        f"**Declared Production Winner: {best_model}**\n\n"
+        f"**{best_model}** is declared the champion production model following holistic multi-criteria evaluation across "
+        f"**overall accuracy (99.46%)**, **cybersecurity threat recall (99.60%)**, **false-positive containment (99.52%)**, "
+        f"**full confusion matrix dominance (lowest FP & lowest FN)**, and **superior modeling of non-linear EDA feature interactions**."
+    )
+
+    # 4 Key Metric Pillars
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+    with kpi1:
+        st.metric("Test Accuracy", "99.46%", "Highest Overall")
+    with kpi2:
+        st.metric("Phishing Recall", "99.60%", "Only 5 Missed / 1,255")
+    with kpi3:
+        st.metric("Precision", "99.52%", "Only 6 False Alarms / 794")
+    with kpi4:
+        st.metric("ROC-AUC Power", "1.0000", "Flawless Discrimination")
+
+    with st.expander("🔬 Detailed Engineering & EDA Justification: Why XGBoost Was Declared Best"):
+        st.markdown("""
+        The selection of **XGBoost Classifier** as the best model is rigorously justified across multiple dimensions:
+
+        1. **Confusion Matrix Dominance (Minimizing Both Error Types):**
+           * **Lowest False Negatives (FN = 5):** Caught 1,250 out of 1,255 phishing attacks (miss rate of only 0.40%). Missed 58.3% fewer attacks than Logistic Regression (FN = 12) and 37.5% fewer than Random Forest (FN = 8). In enterprise cybersecurity, every False Negative represents an unblocked threat reaching an employee inbox.
+           * **Lowest False Positives (FP = 6):** Only 6 benign emails incorrectly flagged out of 794 legitimate emails (50% fewer false alarms than Logistic Regression). Minimizes quarantine fatigue for Security Operations Center (SOC) analysts.
+           * **Highest True Positives (TP = 1,250)** and **Highest True Negatives (TN = 788)** across the entire test split.
+
+        2. **Exploratory Data Analysis (EDA) & Non-Linear Feature Interactions:**
+           * In email text analysis, malicious intent does not depend on a single isolated keyword. It relies on **combinatorial feature interactions** (e.g., high urgency keywords *combined with* credential request tokens and suspicious `[URL_PLACEHOLDER]` links).
+           * **Why Linear Models (Logistic Regression) Fall Short:** Logistic Regression computes a linear weighted sum $\\sum w_i x_i + b$. It treats features additively and cannot model complex conditional combinations without manual cross-product terms, leading to 12 missed attacks and 12 false alarms.
+           * **Why XGBoost Outperforms Random Forest:** While Random Forest builds independent bagging trees, XGBoost employs sequential gradient boosting—optimizing tree splits along the negative gradient of the log-loss function. This enables XGBoost to isolate subtle, obfuscated attack patterns that simpler ensembles miss.
+
+        3. **Balanced F1-Score & ROC-AUC:**
+           * Achieves the highest harmonic mean **F1-Score of 0.9956** and an **ROC-AUC of 1.0000**, confirming superior separability across all possible detection thresholds.
+        """)
 
     st.markdown("---")
 
-    # 3. CONFUSION MATRIX & 4. ROC-AUC CURVE
-    cm_col, roc_col = st.columns(2)
+    # 3. CONFUSION MATRICES FOR ALL MODELS (Comparative & Individual Tabs)
+    st.markdown("### 🔲 Model Confusion Matrices (All Models Comparative View)")
+    st.caption("Visualizing classification error profiles (True Positives, True Negatives, False Positives, False Negatives) across all 3 evaluated classifiers:")
 
-    with cm_col:
-        st.markdown("### 🔲 Confusion Matrix")
-        # Find metrics of best model
-        selected_m_data = next((m for m in models_evaluated if m["model_name"] == best_model), models_evaluated[0])
-        cm_matrix = np.array(selected_m_data["confusion_matrix"])
-
-        fig_cm = px.imshow(
-            cm_matrix,
-            text_auto=True,
+    def create_cm_chart(m_data, is_champion=False):
+        cm = np.array(m_data["confusion_matrix"])
+        tn, fp = cm[0]
+        fn, tp = cm[1]
+        name = m_data["model_name"]
+        title_tag = " ⭐ (Best Model)" if is_champion else ""
+        
+        # Quadrant annotations
+        text_labels = [
+            [f"<b>TN: {tn:,}</b><br><span style='font-size:10px'>Legit Clean</span>", 
+             f"<b>FP: {fp:,}</b><br><span style='font-size:10px'>False Alarm</span>"],
+            [f"<b>FN: {fn:,}</b><br><span style='font-size:10px'>Missed Threat</span>", 
+             f"<b>TP: {tp:,}</b><br><span style='font-size:10px'>Phish Caught</span>"]
+        ]
+        
+        fig = px.imshow(
+            cm,
+            text_auto=False,
             color_continuous_scale="Blues",
             labels=dict(x="Predicted Class", y="Actual Class", color="Count"),
             x=["Legitimate", "Phishing"],
             y=["Legitimate", "Phishing"],
-            title=f"Confusion Matrix ({best_model})"
+            title=f"<b>{name}{title_tag}</b>"
         )
-        fig_cm.update_layout(height=340, margin=dict(l=10, r=10, t=40, b=10))
-        st.plotly_chart(fig_cm, use_container_width=True)
+        fig.update_traces(
+            text=text_labels,
+            texttemplate="%{text}",
+            textfont_size=12
+        )
+        fig.update_layout(
+            height=310,
+            margin=dict(l=10, r=10, t=40, b=10),
+            coloraxis_showscale=False
+        )
+        return fig
 
-    with roc_col:
-        st.markdown("### 📈 ROC-AUC Curve")
+    # Tabbed Interface: Side-by-Side View vs Individual Drill-Down
+    cm_tab_all, cm_tab_xgb, cm_tab_rf, cm_tab_lr = st.tabs([
+        "📊 All 3 Models Side-by-Side",
+        "⚡ XGBoost Classifier (Champion)",
+        "🌲 Random Forest",
+        "📈 Logistic Regression"
+    ])
+
+    # Model data extracts
+    lr_data = next((m for m in models_evaluated if "Logistic" in m["model_name"]), models_evaluated[0])
+    rf_data = next((m for m in models_evaluated if "Random Forest" in m["model_name"]), models_evaluated[1] if len(models_evaluated) > 1 else models_evaluated[0])
+    xgb_data = next((m for m in models_evaluated if "XGBoost" in m["model_name"] or "Gradient" in m["model_name"]), models_evaluated[-1])
+
+    with cm_tab_all:
+        st.caption("Side-by-side comparison of error profiles on the exact same 2,049 held-out test emails:")
+        cm_col1, cm_col2, cm_col3 = st.columns(3)
+        
+        with cm_col1:
+            st.plotly_chart(create_cm_chart(lr_data, is_champion=False), use_container_width=True)
+            st.caption(f"**TP:** {lr_data.get('true_positives', 0):,} | **TN:** {lr_data.get('true_negatives', 0):,}  \n**FP (Alarms):** {lr_data.get('false_positives', 0):,} | **FN (Misses):** {lr_data.get('false_negatives', 0):,}")
+
+        with cm_col2:
+            st.plotly_chart(create_cm_chart(rf_data, is_champion=False), use_container_width=True)
+            st.caption(f"**TP:** {rf_data.get('true_positives', 0):,} | **TN:** {rf_data.get('true_negatives', 0):,}  \n**FP (Alarms):** {rf_data.get('false_positives', 0):,} | **FN (Misses):** {rf_data.get('false_negatives', 0):,}")
+
+        with cm_col3:
+            st.plotly_chart(create_cm_chart(xgb_data, is_champion=True), use_container_width=True)
+            st.caption(f"**TP:** {xgb_data.get('true_positives', 0):,} | **TN:** {xgb_data.get('true_negatives', 0):,}  \n**FP (Alarms):** {xgb_data.get('false_positives', 0):,} | **FN (Misses):** {xgb_data.get('false_negatives', 0):,}")
+
+    def render_cm_drilldown(m_data):
+        c_left, c_right = st.columns([1.2, 1])
+        with c_left:
+            st.plotly_chart(create_cm_chart(m_data, is_champion=("XGBoost" in m_data["model_name"])), use_container_width=True)
+        with c_right:
+            st.markdown(f"#### 🔍 {m_data['model_name']} Breakdown")
+            tp = m_data.get("true_positives", 0)
+            tn = m_data.get("true_negatives", 0)
+            fp = m_data.get("false_positives", 0)
+            fn = m_data.get("false_negatives", 0)
+            
+            d1, d2 = st.columns(2)
+            d1.metric("True Positives (TP)", f"{tp:,}", "Attacks Caught")
+            d2.metric("True Negatives (TN)", f"{tn:,}", "Safe Delivered")
+            
+            d3, d4 = st.columns(2)
+            d3.metric("False Positives (FP)", f"{fp:,}", "False Alarms", delta_color="inverse")
+            d4.metric("False Negatives (FN)", f"{fn:,}", "Missed Threats", delta_color="inverse")
+
+    with cm_tab_xgb:
+        render_cm_drilldown(xgb_data)
+
+    with cm_tab_rf:
+        render_cm_drilldown(rf_data)
+
+    with cm_tab_lr:
+        render_cm_drilldown(lr_data)
+
+    st.markdown("---")
+
+    # 4. ROC-AUC CURVE & 5. FEATURE IMPORTANCE (Side by Side 2 Columns)
+    r_col1, r_col2 = st.columns(2)
+
+    with r_col1:
+        st.markdown("### 📈 Multi-Model ROC-AUC Comparison")
+        st.caption("Receiver Operating Characteristic curves across all 3 models demonstrating class separability:")
         fig_roc = go.Figure()
         
         # Add diagonal baseline
@@ -757,39 +897,36 @@ elif selected_page == "📈 Model Performance":
             title="Multi-Model ROC Comparison",
             xaxis_title="False Positive Rate",
             yaxis_title="True Positive Rate",
-            height=340,
+            height=360,
             margin=dict(l=10, r=10, t=40, b=10),
-            legend=dict(x=0.45, y=0.15)
+            legend=dict(x=0.42, y=0.15)
         )
         st.plotly_chart(fig_roc, use_container_width=True)
 
-    st.markdown("---")
+    with r_col2:
+        st.markdown("### 🌐 Top Predictive Feature Importance")
+        st.caption("Top vocabulary tokens and heuristic features driving predictions across the ensemble:")
+        binary_model = artifacts["binary_model"]
+        feature_names = artifacts["feature_names"]
+        global_importance_df = compute_global_feature_importance(binary_model, feature_names, top_n=15)
 
-    # 5. FEATURE IMPORTANCE / EXPLAINABILITY ⭐
-    st.markdown("### 🌐 Model Feature Importance & Influential Indicators")
-    st.caption("Top vocabulary tokens driving threat predictions across the trained machine learning pipeline:")
-
-    binary_model = artifacts["binary_model"]
-    feature_names = artifacts["feature_names"]
-    global_importance_df = compute_global_feature_importance(binary_model, feature_names, top_n=15)
-
-    if not global_importance_df.empty:
-        fig_feat = px.bar(
-            global_importance_df,
-            x="importance",
-            y="feature",
-            orientation="h",
-            color="direction",
-            color_discrete_map={
-                "Phishing Indicator": "#ef4444",
-                "Legitimate Indicator": "#22c55e",
-                "High Threat Indicator": "#ef4444"
-            },
-            labels={"importance": "Relative Model Weight / Importance", "feature": "Feature Token"},
-            title="Top 15 Most Influential Predictive Features"
-        )
-        fig_feat.update_layout(yaxis=dict(autorange="reversed"), height=380, margin=dict(l=10, r=10, t=40, b=10))
-        st.plotly_chart(fig_feat, use_container_width=True)
+        if not global_importance_df.empty:
+            fig_feat = px.bar(
+                global_importance_df,
+                x="importance",
+                y="feature",
+                orientation="h",
+                color="direction",
+                color_discrete_map={
+                    "Phishing Indicator": "#ef4444",
+                    "Legitimate Indicator": "#22c55e",
+                    "High Threat Indicator": "#ef4444"
+                },
+                labels={"importance": "Relative Weight", "feature": "Feature Token"},
+                title="Top 15 Most Influential Predictive Features"
+            )
+            fig_feat.update_layout(yaxis=dict(autorange="reversed"), height=360, margin=dict(l=10, r=10, t=40, b=10))
+            st.plotly_chart(fig_feat, use_container_width=True)
 
 
 # Clean Footer
