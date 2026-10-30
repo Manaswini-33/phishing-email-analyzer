@@ -535,7 +535,7 @@ elif selected_page == "📊 Threat Analytics":
             title="Class Distribution in Dataset"
         )
         fig_dist.update_layout(height=340, margin=dict(l=10, r=10, t=40, b=10))
-        st.plotly_chart(fig_dist, use_container_width=True)
+        st.plotly_chart(fig_dist, use_container_width=True, key="page2_fig_dist_pie")
 
     with c_col2:
         st.markdown("### 📊 Phishing Type Distribution")
@@ -552,7 +552,7 @@ elif selected_page == "📊 Threat Analytics":
             title="Distribution across 13 Phishing & Normal Categories"
         )
         fig_types.update_layout(yaxis=dict(autorange="reversed"), height=340, margin=dict(l=10, r=10, t=40, b=10))
-        st.plotly_chart(fig_types, use_container_width=True)
+        st.plotly_chart(fig_types, use_container_width=True, key="page2_fig_phishing_types")
 
     st.markdown("---")
 
@@ -571,7 +571,7 @@ elif selected_page == "📊 Threat Analytics":
         title="Email Volume by Threat Severity Rating"
     )
     fig_sev.update_layout(height=320, margin=dict(l=10, r=10, t=30, b=10))
-    st.plotly_chart(fig_sev, use_container_width=True)
+    st.plotly_chart(fig_sev, use_container_width=True, key="page2_fig_severity_bar")
 
     st.markdown("---")
 
@@ -624,7 +624,7 @@ elif selected_page == "📊 Threat Analytics":
         title="Indicator Prevalence: Phishing vs Legitimate Emails"
     )
     fig_comp.update_layout(height=340, margin=dict(l=10, r=10, t=40, b=10))
-    st.plotly_chart(fig_comp, use_container_width=True)
+    st.plotly_chart(fig_comp, use_container_width=True, key="page2_fig_indicator_comp")
 
     st.markdown("---")
 
@@ -824,21 +824,25 @@ elif selected_page == "📈 Model Performance":
         cm_col1, cm_col2, cm_col3 = st.columns(3)
         
         with cm_col1:
-            st.plotly_chart(create_cm_chart(lr_data, is_champion=False), use_container_width=True)
+            st.plotly_chart(create_cm_chart(lr_data, is_champion=False), use_container_width=True, key="cm_side_lr_chart")
             st.caption(f"**TP:** {lr_data.get('true_positives', 0):,} | **TN:** {lr_data.get('true_negatives', 0):,}  \n**FP (Alarms):** {lr_data.get('false_positives', 0):,} | **FN (Misses):** {lr_data.get('false_negatives', 0):,}")
 
         with cm_col2:
-            st.plotly_chart(create_cm_chart(rf_data, is_champion=False), use_container_width=True)
+            st.plotly_chart(create_cm_chart(rf_data, is_champion=False), use_container_width=True, key="cm_side_rf_chart")
             st.caption(f"**TP:** {rf_data.get('true_positives', 0):,} | **TN:** {rf_data.get('true_negatives', 0):,}  \n**FP (Alarms):** {rf_data.get('false_positives', 0):,} | **FN (Misses):** {rf_data.get('false_negatives', 0):,}")
 
         with cm_col3:
-            st.plotly_chart(create_cm_chart(xgb_data, is_champion=True), use_container_width=True)
+            st.plotly_chart(create_cm_chart(xgb_data, is_champion=True), use_container_width=True, key="cm_side_xgb_chart")
             st.caption(f"**TP:** {xgb_data.get('true_positives', 0):,} | **TN:** {xgb_data.get('true_negatives', 0):,}  \n**FP (Alarms):** {xgb_data.get('false_positives', 0):,} | **FN (Misses):** {xgb_data.get('false_negatives', 0):,}")
 
-    def render_cm_drilldown(m_data):
+    def render_cm_drilldown(m_data, drill_key: str):
         c_left, c_right = st.columns([1.2, 1])
         with c_left:
-            st.plotly_chart(create_cm_chart(m_data, is_champion=("XGBoost" in m_data["model_name"])), use_container_width=True)
+            st.plotly_chart(
+                create_cm_chart(m_data, is_champion=("XGBoost" in m_data["model_name"])),
+                use_container_width=True,
+                key=f"cm_drill_{drill_key}_chart"
+            )
         with c_right:
             st.markdown(f"#### 🔍 {m_data['model_name']} Breakdown")
             tp = m_data.get("true_positives", 0)
@@ -855,13 +859,13 @@ elif selected_page == "📈 Model Performance":
             d4.metric("False Negatives (FN)", f"{fn:,}", "Missed Threats", delta_color="inverse")
 
     with cm_tab_xgb:
-        render_cm_drilldown(xgb_data)
+        render_cm_drilldown(xgb_data, "xgb")
 
     with cm_tab_rf:
-        render_cm_drilldown(rf_data)
+        render_cm_drilldown(rf_data, "rf")
 
     with cm_tab_lr:
-        render_cm_drilldown(lr_data)
+        render_cm_drilldown(lr_data, "lr")
 
     st.markdown("---")
 
@@ -901,7 +905,7 @@ elif selected_page == "📈 Model Performance":
             margin=dict(l=10, r=10, t=40, b=10),
             legend=dict(x=0.42, y=0.15)
         )
-        st.plotly_chart(fig_roc, use_container_width=True)
+        st.plotly_chart(fig_roc, use_container_width=True, key="multi_model_roc_chart")
 
     with r_col2:
         st.markdown("### 🌐 Top Predictive Feature Importance")
@@ -926,7 +930,7 @@ elif selected_page == "📈 Model Performance":
                 title="Top 15 Most Influential Predictive Features"
             )
             fig_feat.update_layout(yaxis=dict(autorange="reversed"), height=360, margin=dict(l=10, r=10, t=40, b=10))
-            st.plotly_chart(fig_feat, use_container_width=True)
+            st.plotly_chart(fig_feat, use_container_width=True, key="top_features_importance_chart")
 
 
 # Clean Footer
